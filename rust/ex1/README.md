@@ -24,8 +24,11 @@ for a rust "package" (Project). To make an executable you can add
 `--bin` so the complete command becomes:
 
 ```
-> cargo new cargo_example --bin 
+> cargo new cargo_example --bin
 ```
+
+Making a binary is the default option, so adding or leaving out the
+`--bin` has the same result.
 
 If the plan is to make a library you can add the `--lib` flag.
 
