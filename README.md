@@ -1,4 +1,4 @@
 # HACKSTUGAN
 
-Learning about microcontrollers in a group
+Learning about microcontrollers and programming in general as a group
 
