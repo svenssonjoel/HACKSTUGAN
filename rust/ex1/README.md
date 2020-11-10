@@ -1,5 +1,5 @@
 
-# Rust : Variables, functions and the build system
+# Rust : Variables, types and the build system
 
 
 ## Create packages using 'cargo'
