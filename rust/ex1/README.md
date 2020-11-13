@@ -330,4 +330,8 @@ fn main() {
 }
 ``` 
 
+The difference between `const` and static is that the `const` variable
+occupies no memory at runtime and you cannot take the address of a
+`const`. A `static` resides in memory and you can take refer to it.
+
 
