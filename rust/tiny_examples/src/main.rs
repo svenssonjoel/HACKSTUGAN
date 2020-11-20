@@ -14,8 +14,10 @@
 // ////////////////////////////////////////////////////////////
 /* 
   - size_of_different_things
+  - conditionals_example
   - for_loop_example
   - while_loop_example
+  - control_flow_in_loops
   - main
 */
 
@@ -45,6 +47,35 @@ fn size_of_different_things() {
     println!("size of c is {}", std::mem::size_of_val(&c));
     println!("size of d is {}", std::mem::size_of_val(&d));
     println!("size of e is {}", std::mem::size_of_val(&e));
+}
+
+
+fn conditionals_example() {
+
+    let a = 10;
+    let b = 5;
+    let c = true;
+    let d = false; 
+
+    if a > b {
+	println!("a is greater then b"); 
+    } else if a == b {
+	println!("a is equal to b");
+    } else {
+	println!("b is greater than a");
+    }
+
+    if c {
+	println!("c is true");
+    } else {
+	println!("c is false");
+    }
+    
+    if d {
+	println!("d is true");
+    } else {
+	println!("d is false");
+    }
 }
 
 
@@ -88,10 +119,24 @@ fn while_loop_example() {
 }
 
 
+fn control_flow_in_loops() {
+
+    for a in 1..10 {
+
+	if a % 2 == 0 { continue; } // skip even numbers
+	if a == 7 { break;} // stop looping if a is 7
+
+	println!("a is {}", a);
+    }
+}
+
+
 fn main() {
 
     size_of_different_things();
+    conditionals_example();
     for_loop_example();
     ranges();
     while_loop_example();
+    control_flow_in_loops();
 }
