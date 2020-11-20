@@ -18,6 +18,7 @@
   - for_loop_example
   - while_loop_example
   - control_flow_in_loops
+  - a_string
   - main
 */
 
@@ -131,6 +132,18 @@ fn control_flow_in_loops() {
 }
 
 
+fn a_string() {
+
+    let a : String = "hello, ".into();
+    let b : &str   = "world";
+
+    println!("{}{}", a, b);
+
+}
+
+
+
+
 fn main() {
 
     size_of_different_things();
@@ -139,4 +152,5 @@ fn main() {
     ranges();
     while_loop_example();
     control_flow_in_loops();
+    a_string();
 }
