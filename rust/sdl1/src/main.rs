@@ -98,7 +98,7 @@ fn main() {
 	}
 
 	canvas.present();
-	std::thread::sleep(Duration::new(0, 100000));
+	std::thread::sleep(Duration::new(0, 1000000));
     }
     
 }
