@@ -153,12 +153,13 @@ void led_set(int led, int value) {
 static int send_mail(timer_tick_t t) {
  
   /* will be called from inside of the timer interrupt */
+  
   int r = 1; /*success*/
   timer_tick_t *m = (timer_tick_t*)chPoolAllocI(&tick_pool);
   
   if (m) { 
     *m = t;
-
+    
     msg_t msg_val = chMBPostI(&mb, (msg_t)m);
     if (msg_val != MSG_OK) {  /* failed to send */
       chPoolFree(&tick_pool, m);
@@ -170,20 +171,21 @@ static int send_mail(timer_tick_t t) {
 }
 
 
-void block_mail(timer_tick_t *t) {
+bool block_mail(timer_tick_t *t) {
 
+  bool r = true;
   msg_t msg_val;
 
-  int r = chMBFetchTimeout(&mb, &msg_val, TIME_INFINITE);
+  int m = chMBFetchTimeout(&mb, &msg_val, TIME_INFINITE);
 
-  if (r == MSG_OK) {
+  if (m == MSG_OK) {
     *t = *(timer_tick_t*)msg_val;
 
-    chPoolFree(&tick_pool, t); /* free the pool allocated pointer */
+    chPoolFree(&tick_pool, msg_val); /* free the pool allocated pointer */
   } else {
-    /* This is an error. what to do ??!! */
+    r = false;
   }
-
+  return r;
 }
 
 
@@ -206,10 +208,13 @@ static THD_FUNCTION(tick_thread, arg) {
  while (1) {
    chprintf((BaseSequentialStream *)&SDU1, "Waiting for mail\r\n"); 
    timer_tick_t t;
-   block_mail(&t);
-   chprintf((BaseSequentialStream *)&SDU1, "Got mail!\r\n"); 
-   
-   //set_ccr_tim5(0, (uint32_t)wake_time);
+   bool r = block_mail(&t);
+   if (r) { 
+     chprintf((BaseSequentialStream *)&SDU1, "Got mail: %u\r\n", t.tick);
+   } else {
+     chprintf((BaseSequentialStream *)&SDU1, "Got mail: Error\r\n", t.tick);
+   }
+   set_ccr_tim5(0, t.tick + 5000);
  }
 }
 
