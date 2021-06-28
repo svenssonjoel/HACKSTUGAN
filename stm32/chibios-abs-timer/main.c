@@ -41,7 +41,6 @@ typedef struct {  /* message type */
 
 #define MAX_MESSAGES 64
 
-//static mailbox_t mb; /* mailbox struct */
 msg_t box_contents[MAX_MESSAGES]; /* mailbox storage */
 MAILBOX_DECL(mb, box_contents, MAX_MESSAGES);
 
@@ -49,7 +48,7 @@ MAILBOX_DECL(mb, box_contents, MAX_MESSAGES);
 timer_tick_t tick_storage[MAX_MESSAGES];
 MEMORYPOOL_DECL(tick_pool,MAX_MESSAGES, PORT_NATURAL_ALIGN, NULL);
 
-static int send_mail(timer_tick_t t);
+static bool send_mail(timer_tick_t t);
 
 /*********************************/
 /* Low level timer setup attempt */
@@ -102,10 +101,11 @@ void setup_timer(void) {
 
   tim5->CCER |= 0x1; /* activate compare on ccr channel 1 */
   tim5->DIER |= 0x2; 
-  
+
+  tim5->CR1 &= ~0x1FF;
   tim5->CNT = 0;
-  tim5->EGR = 0x1; // Update event (Makes all the configurations stick)
-  tim5->CR1 = 0x1; // enable
+  tim5->EGR |= 0x1; // Update event (Makes all the configurations stick)
+  tim5->CR1 |= 0x1; // enable
 
 }
  
@@ -150,11 +150,11 @@ void led_set(int led, int value) {
 }
 
  
-static int send_mail(timer_tick_t t) {
+static bool send_mail(timer_tick_t t) {
  
   /* will be called from inside of the timer interrupt */
   
-  int r = 1; /*success*/
+  bool r = true; /*success*/
   timer_tick_t *m = (timer_tick_t*)chPoolAllocI(&tick_pool);
   
   if (m) { 
@@ -163,7 +163,7 @@ static int send_mail(timer_tick_t t) {
     msg_t msg_val = chMBPostI(&mb, (msg_t)m);
     if (msg_val != MSG_OK) {  /* failed to send */
       chPoolFree(&tick_pool, m);
-      r = 0;
+      r = false;
     }
   }
  
@@ -171,7 +171,7 @@ static int send_mail(timer_tick_t t) {
 }
 
 
-bool block_mail(timer_tick_t *t) {
+static bool block_mail(timer_tick_t *t) {
 
   bool r = true;
   msg_t msg_val;
@@ -192,6 +192,9 @@ bool block_mail(timer_tick_t *t) {
 /*****************/ 
 /* TICKER THREAD */
 
+uint32_t alarms[5] = { 1357, 2596, 5679, 8000, 10101 };
+
+
 static THD_WORKING_AREA(thread_wa, 1024); /* name, size */
 static thread_t *thread;
 
@@ -199,11 +202,13 @@ static THD_FUNCTION(tick_thread, arg) {
  chRegSetThreadName("tick");
  (void) arg;
 
+ int current_alarm = 0;
 
  chprintf((BaseSequentialStream *)&SDU1, "Entering tick_thread\r\n"); 
 
  setup_timer();  /* setup timer for continuous runing compare mode */
- set_ccr_tim5(0, 5500);
+ set_ccr_tim5(0, alarms[current_alarm]); /* set the first alarm */
+ current_alarm ++;
  
  while (1) {
    chprintf((BaseSequentialStream *)&SDU1, "Waiting for mail\r\n"); 
@@ -212,9 +217,12 @@ static THD_FUNCTION(tick_thread, arg) {
    if (r) { 
      chprintf((BaseSequentialStream *)&SDU1, "Got mail: %u\r\n", t.tick);
    } else {
-     chprintf((BaseSequentialStream *)&SDU1, "Got mail: Error\r\n", t.tick);
+     chprintf((BaseSequentialStream *)&SDU1, "Got mail: Error\r\n");
    }
-   set_ccr_tim5(0, t.tick + 5000);
+
+   if (current_alarm < 5) {
+     set_ccr_tim5(0, alarms[current_alarm++]);
+   }
  }
 }
 
